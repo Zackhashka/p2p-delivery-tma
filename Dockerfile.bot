@@ -5,7 +5,7 @@ WORKDIR /app
 COPY src/bot/package*.json ./
 COPY src/bot/prisma ./prisma/
 
-RUN npm install
+RUN npm install --ignore-scripts
 RUN npx prisma generate
 
 COPY src/bot/ .
