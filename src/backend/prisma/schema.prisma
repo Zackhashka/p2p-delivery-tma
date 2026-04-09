@@ -1,15 +1,174 @@
 generator client {
-  provider = "@prisma/client-js"
+  provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "postgress"
-  url     = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
 model User {
-  id       Int @id @default(autoincrement())
-  email   String  @unique
-  password String
-  createdAt DateTime @default(now())
+  id                BigInt   @id @default(autoincrement())
+  tg_id             BigInt   @unique
+  first_name        String
+  last_name         String   @default("")
+  username          String   @default("")
+  avatar_url        String   @default("")
+  phone             String   @default("")
+  verified          Boolean  @default(false)
+  rating            Float    @default(0) @db.DoublePrecision
+  delivery_count    Int      @default(0)
+  reviews_count     Int      @default(0)
+  bio               String   @default("") @db.VarChar(500)
+  languages         String[] @default([])
+  is_bot            Boolean  @default(false)
+  language_code     String   @default("en")
+  allows_write_to_pm Boolean @default(false)
+  created_at        DateTime @default(now())
+  updated_at        DateTime @updatedAt
+
+  trips_as_traveler  Trip[]
+  requests_as_sender Request[]
+  deals_as_traveler  Deal[]   @relation("DealTraveler")
+  deals_as_sender    Deal[]   @relation("DealSender")
+
+  @@index([username])
+  @@index([verified])
+  @@map("users")
+}
+
+enum ParcelType {
+  docs
+  medicine
+  clothes
+  food
+  books
+  other
+}
+
+enum Currency {
+  EUR
+  USD
+  GBP
+  CHF
+  PLN
+}
+
+enum TripStatus {
+  active
+  completed
+  cancelled
+}
+
+enum RequestStatus {
+  open
+  matched
+  completed
+  cancelled
+}
+
+enum DealStatus {
+  agreed
+  picked_up
+  in_transit
+  delivered
+  disputed
+  cancelled
+}
+
+model Trip {
+  id               String     @id @default(uuid()) @db.Uuid
+  traveler_id      BigInt
+  traveler         User       @relation(fields: [traveler_id], references: [tg_id])
+  from_city        String
+  to_city          String
+  from_country     String
+  to_country       String
+  date_start       DateTime
+  date_end         DateTime
+  capacity_kg      Float      @db.DoublePrecision
+  used_capacity_kg Float      @default(0) @db.DoublePrecision
+  categories       ParcelType[] @default([])
+  price_per_kg     Float      @db.DoublePrecision
+  currency         Currency   @default(EUR)
+  description      String     @default("") @db.VarChar(1000)
+  route_description String    @default("")
+  is_flexible      Boolean    @default(false)
+  status           TripStatus @default(active)
+  created_at       DateTime   @default(now())
+  updated_at       DateTime   @updatedAt
+
+  deals            Deal[]
+
+  @@index([traveler_id])
+  @@index([from_city, to_city, status])
+  @@index([date_start, status])
+  @@index([status])
+  @@map("trips")
+}
+
+model Request {
+  id                  String        @id @default(uuid()) @db.Uuid
+  sender_id           BigInt
+  sender              User          @relation(fields: [sender_id], references: [tg_id])
+  from_city           String
+  to_city             String
+  from_country        String
+  to_country          String
+  desired_date_start  DateTime
+  desired_date_end    DateTime
+  parcel_type         ParcelType
+  weight_kg           Float         @db.DoublePrecision
+  reward_amount       Float         @db.DoublePrecision
+  reward_currency     Currency      @default(EUR)
+  description         String        @default("") @db.VarChar(1000)
+  photo_url           String        @default("")
+  pickup_address      String        @default("")
+  delivery_address    String        @default("")
+  special_instructions String       @default("")
+  fragile             Boolean       @default(false)
+  status              RequestStatus @default(open)
+  created_at          DateTime      @default(now())
+  updated_at          DateTime      @updatedAt
+
+  deals               Deal[]
+
+  @@index([sender_id])
+  @@index([from_city, to_city, status])
+  @@index([desired_date_start, status])
+  @@index([status])
+  @@map("requests")
+}
+
+model Deal {
+  id                   String     @id @default(uuid()) @db.Uuid
+  trip_id              String     @db.Uuid
+  trip                 Trip       @relation(fields: [trip_id], references: [id])
+  request_id           String     @db.Uuid
+  request              Request    @relation(fields: [request_id], references: [id])
+  traveler_id          BigInt
+  traveler             User       @relation("DealTraveler", fields: [traveler_id], references: [tg_id])
+  sender_id            BigInt
+  sender               User       @relation("DealSender", fields: [sender_id], references: [tg_id])
+  agreed_price         Float      @db.DoublePrecision
+  currency             Currency   @default(EUR)
+  status               DealStatus @default(agreed)
+  pickup_confirmed_at  DateTime?
+  delivery_confirmed_at DateTime?
+  traveler_rating      Int?       @db.SmallInt
+  traveler_review      String     @default("") @db.VarChar(500)
+  sender_rating        Int?       @db.SmallInt
+  sender_review        String     @default("") @db.VarChar(500)
+  dispute_reason       String     @default("")
+  dispute_resolved_at  DateTime?
+  notes                String     @default("")
+  created_at           DateTime   @default(now())
+  updated_at           DateTime   @updatedAt
+
+  @@index([trip_id, request_id])
+  @@index([traveler_id, status])
+  @@index([sender_id, status])
+  @@index([status, created_at(sort: Desc)])
+  @@map("deals")
 }
