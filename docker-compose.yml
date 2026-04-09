@@ -1,0 +1,46 @@
+version: "3.8"
+
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+    ports:
+      - "3000:3000"
+    env_file:
+      - .env
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+
+  bot:
+    build:
+      context: .
+      dockerfile: Dockerfile.bot
+    env_file:
+      - .env
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+
+  postgres:
+    image: postgres:16-alpine
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_DB: p2p_delivery
+      POSTGRES_USER: p2padmin
+      POSTGRES_PASSWORD: p2pdevpass
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U p2padmin -d p2p_delivery"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+volumes:
+  pg_data:

@@ -1,0 +1,15 @@
+FROM node:20-alpine
+
+WORKDIR /app
+
+COPY src/backend/package*.json ./
+COPY src/backend/prisma ./prisma/
+
+RUN npm ci
+RUN npx prisma generate
+
+COPY src/backend/ .
+
+EXPOSE 3000
+
+CMD ["node", "server.js"]

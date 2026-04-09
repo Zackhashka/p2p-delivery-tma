@@ -1,0 +1,1 @@
+export function validateEmail(email) { const re = /^[^-@\\s]+@[^-@\\s]+(\.[^-@\\s]+)?$/i; return re.test(email); } export function validatePhone(phone) { const re = /^\+?[0-9]{10,15}$/; return re.test(phone); }

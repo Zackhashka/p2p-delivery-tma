@@ -1,0 +1,29 @@
+{
+  "name": "p2p-delivery-telegram-bot",
+  "version": "1.0.0",
+  "description": "Telegram bot for P2P Delivery Mini App",
+  "type": "module",
+  "main": "bot.js",
+  "scripts": {
+    "start": "node bot.js",
+    "dev": "nodemon bot.js",
+    "webhook:set": "node webhook.js set",
+    "webhook:delete": "node webhook.js delete",
+    "postinstall": "prisma generate"
+  },
+  "keywords": ["telegram", "bot", "p2p", "delivery", "mini-app"],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "grammy": "^1.24.0",
+    "@prisma/client": "^5.22.0",
+    "dotenv": "^16.3.1"
+  },
+  "devDependencies": {
+    "prisma": "^5.22.0",
+    "nodemon": "^3.0.2"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

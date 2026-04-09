@@ -1,0 +1,1 @@
+const API_BASE = process.env.VITE_API_BASE || '/api'; export async function fetchTrips() { const res = await fetch(`${API_BASE}/trips`); if (!res.ok) throw new Error('Failed to fetch trips'); return res.json(); }
